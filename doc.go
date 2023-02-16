@@ -508,6 +508,7 @@ type dWuKongPicture struct {
 
 	Likes   []pictureItem `bson:"likes"   json:"-"`
 	Publics []pictureItem `bson:"publics" json:"-"`
+	Items   []pictureItem `bson:"items"   json:"-"`
 }
 
 type pictureItem struct {
@@ -518,7 +519,7 @@ type pictureItem struct {
 	OBSPath   string   `bson:"obspath"     json:"obspath"`
 	Diggs     []string `bson:"diggs"       json:"diggs"`
 	DiggCount int      `bson:"digg_count"  json:"digg_count"`
-	Version   int      `bson:"version"     json:"-"`
+	Version   int      `bson:"version"     json:"version"`
 	CreatedAt string   `bson:"created_at"  json:"created_at"`
 }
 

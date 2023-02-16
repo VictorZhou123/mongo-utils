@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -30,37 +33,39 @@ func getWuKongPictures() (m map[string]dWuKongPicture) {
 	return
 }
 
-// 2. modify data of likes
-func modifyLikes(owner string, item pictureItem) (err error) {
-	item = pictureItem{
-		Id:        item.Id,
-		Owner:     owner,
-		Desc:      item.Desc,
-		Style:     item.Style,
-		OBSPath:   item.OBSPath,
-		Diggs:     []string{},
-		DiggCount: 0,
-		CreatedAt: item.CreatedAt,
+// 2. create likes and intert array data
+func createLikes(owner string, items []pictureItem, version int) (err error) {
+	var likes []primitive.M
+	for _, item := range items {
+		like, _ := toLikePictureItemDoc(owner, &item)
+		likes = append(likes, like)
 	}
 
-	doc, _ := genDoc(item)
-	doc[fieldVersion] = 1
-
 	f := func(ctx context.Context) error {
-		_, err := cli.modifyArrayElemWithoutVersion(
-			ctx, collectionName, fieldLikes,
-			wukongOwnerFilter(owner), wukongIdFilter(item.Id),
-			doc, mongoCmdSet,
+		return cli.updateDoc(
+			ctx, collectionName,
+			wukongOwnerFilter(owner),
+			bson.M{fieldLikes: likes}, mongoCmdSet, version,
 		)
+	}
 
-		return err
+	return withContext(f)
+}
+
+// 3. create publics without data
+func createPublics(owner string, version int) (err error) {
+	f := func(ctx context.Context) error {
+		return cli.updateDoc(
+			ctx, collectionName,
+			wukongOwnerFilter(owner),
+			bson.M{fieldPublics: bson.A{}}, mongoCmdSet, version,
+		)
 	}
 
 	return withContext(f)
 }
 
 func main() {
-
 	// 修改下方的conn和dbName
 	err := Initialize("mongodb://xiheAdmin:Password11@127.0.0.1:27017/xihe-server-test?timeoutMS=5000", "xihe-server-test")
 	if err != nil {
@@ -70,8 +75,21 @@ func main() {
 	m := getWuKongPictures()
 
 	for k, v := range m {
-		for _, like := range v.Likes {
-			modifyLikes(k, like)
-		}
+		createLikes(k, v.Items, v.Version)
+		createPublics(k, v.Version+1)
 	}
+}
+
+func toLikePictureItemDoc(owner string, item *pictureItem) (primitive.M, error) {
+	like := pictureItem{
+		Id:        item.Id,
+		Owner:     owner,
+		Desc:      item.Desc,
+		Style:     item.Style,
+		OBSPath:   item.OBSPath,
+		Diggs:     []string{},
+		DiggCount: 0,
+		CreatedAt: item.CreatedAt,
+	}
+	return genDoc(like)
 }
