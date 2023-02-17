@@ -41,11 +41,18 @@ func createLikes(owner string, items []pictureItem, version int) (err error) {
 		likes = append(likes, like)
 	}
 
+	var updateCmd primitive.M
+	if len(likes) > 0 {
+		updateCmd = bson.M{fieldLikes: likes}
+	} else {
+		updateCmd = bson.M{fieldLikes: bson.A{}}
+	}
+
 	f := func(ctx context.Context) error {
 		return cli.updateDoc(
 			ctx, collectionName,
 			wukongOwnerFilter(owner),
-			bson.M{fieldLikes: likes}, mongoCmdSet, version,
+			updateCmd, mongoCmdSet, version,
 		)
 	}
 
