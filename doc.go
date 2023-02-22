@@ -493,8 +493,15 @@ type luojiaItem struct {
 }
 
 type dWuKong struct {
-	Id      string    `bson:"id"        json:"id"`
-	Samples []dSample `bson:"samples"   json:"samples"`
+	Id       string        `bson:"id"        json:"id"`
+	Samples  []dSample     `bson:"samples"   json:"samples"`
+	Pictures []pictureInfo `bson:"pictures"  json:"pictures"`
+}
+
+type pictureInfo struct {
+	Desc  string `bson:"desc"            json:"desc"`
+	Link  string `bson:"link"            json:"link"`
+	Style string `bson:"style"           json:"style"`
 }
 
 type dSample struct {
@@ -517,6 +524,7 @@ type pictureItem struct {
 	Desc      string   `bson:"desc"        json:"desc"`
 	Style     string   `bson:"style"       json:"style"`
 	OBSPath   string   `bson:"obspath"     json:"obspath"`
+	Level     int      `bson:"level"       json:"level"`
 	Diggs     []string `bson:"diggs"       json:"diggs"`
 	DiggCount int      `bson:"digg_count"  json:"digg_count"`
 	Version   int      `bson:"version"     json:"version"`
